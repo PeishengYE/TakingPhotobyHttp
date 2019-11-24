@@ -77,7 +77,7 @@ public  class AsyncHttpServerYep implements Runnable {
                     os.flush();
                     response.send("image/jpeg", os.toByteArray());
                     mServerService.requireStopTakingPhoto();
-                    Log.d(LOG_TAG, "onRequest()>> no destroy Camera Activity; done ");
+                    Log.d(LOG_TAG, "onRequest()>>  done ");
                     return;
 
                 } catch (Exception e) {
