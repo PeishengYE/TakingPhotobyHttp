@@ -26,6 +26,11 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Locale;
 
+import static com.radioyps.takingpicturebyhttp.CommonConstants.DESTROY_ACITVITY;
+import static com.radioyps.takingpicturebyhttp.CommonConstants.EXTRA_IMAGE_BYTE_ARRAY;
+import static com.radioyps.takingpicturebyhttp.CommonConstants.SERVICE_IS_READY;
+import static com.radioyps.takingpicturebyhttp.CommonConstants.TAKING_PICTURE;
+import static com.radioyps.takingpicturebyhttp.HttpServerService.informActivityReady;
 import static com.radioyps.takingpicturebyhttp.HttpServerService.sendPictureToService;
 
 public class MainActivity extends AppCompatActivity {
@@ -38,12 +43,13 @@ public class MainActivity extends AppCompatActivity {
     private static Bitmap mBitmap = null;
     private static SurfaceHolder holder = null;
     private static Context mContext = null;
+    private static boolean isServerReady = false;
 
 
     private static void sendPictureToServiceLocal(byte[] data){
         Intent intent = new Intent(mContext, HttpServerService.class);
-        intent.putExtra(HttpServerService.EXTRA_IMAGE_BYTE_ARRAY, data);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra(EXTRA_IMAGE_BYTE_ARRAY, data);
+        //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         sendPictureToService(intent);
     }
@@ -91,12 +97,16 @@ public class MainActivity extends AppCompatActivity {
         mHandler = new Handler() {
             public void handleMessage(Message msg) {
                 switch (msg.what) {
-                    case com.radioyps.takingpicturebyhttp.CommonConstants.DESTROY_ACITVITY:
+                    case DESTROY_ACITVITY:
                         finish();
                         break;
-                    case com.radioyps.takingpicturebyhttp.CommonConstants.TAKING_PICTURE:
+                    case TAKING_PICTURE:
                         takingPhoto();
                         break;
+                    case SERVICE_IS_READY:
+                        isServerReady = true;
+                        break;
+
                 }
             }};
 
@@ -122,6 +132,8 @@ public class MainActivity extends AppCompatActivity {
 
         //设置Activity的根内容视图
         setContentView(fl);
+        startService(new Intent(this, HttpServerService.class));
+        informActivityReady();
     }
 
 
@@ -165,25 +177,11 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public static void sendMessageToActivity(int messageFlag, String message ){
-
+    public static void sendMessageToActivity(int what ){
         String mesg = null;
-
-//        if(message.equalsIgnoreCase(CommonConstants.FLAG_GCM_FAILURE)){
-//            mesg = mContext.getString(R.string.remote_door_cmd_in_failure);
-//        }else if(message.equalsIgnoreCase(CommonConstants.FLAG_GCM_SENDING_OK)){
-//            mesg = mContext.getString(R.string.remote_door_cmd_in_success);
-//        }else if(message.equalsIgnoreCase(CommonConstants.FLAG_GCM_REMOTE_CONFIRMATION_OK)){
-//
-//            mesg = mContext.getString(R.string.remote_door_button_ready);
-//        }else
-//            mesg = message;
-
         Message.obtain(mHandler,
-                messageFlag,
+                what,
                 mesg).sendToTarget();
-
-
     }
 
     // 照相视图
@@ -204,10 +202,9 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void surfaceDestroyed(SurfaceHolder holder) {
                     // 停止预览
-                    mCamera.stopPreview();
+                    if(mCamera != null)  mCamera.stopPreview();
                     // 释放相机资源并置空
-                    mCamera.release();
-                    mCamera = null;
+                    releaseCamera();
                 }
 
                 @Override
@@ -219,8 +216,7 @@ public class MainActivity extends AppCompatActivity {
                         mCamera.setPreviewDisplay(holder);
                     } catch (IOException e) {
                         // 释放相机资源并置空
-                        mCamera.release();
-                        mCamera = null;
+                        releaseCamera();
                     }
 
                 }
@@ -249,13 +245,22 @@ public class MainActivity extends AppCompatActivity {
                     } catch (IllegalStateException e){
                         Log.i("YEP: CameraTaking","failed on setParameters");
                         e.printStackTrace();
-                        mCamera.release();
-                        mCamera = null;
+                        releaseCamera();
                     }
                 }
             });
             // 设置Push缓冲类型，说明surface数据由其他来源提供，而不是用自己的Canvas来绘图，在这里是由摄像头来提供数据
             holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        }
+
+    }
+
+    private void releaseCamera(){
+
+        if(mCamera != null){
+
+            mCamera.release();
+            mCamera = null;
         }
 
     }
