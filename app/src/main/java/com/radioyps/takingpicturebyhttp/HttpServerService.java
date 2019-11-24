@@ -87,7 +87,10 @@ public  class HttpServerService  extends Service
 
 
      public void requireTakingPhoto(){
-         startActivity(new Intent(mContext, MainActivity.class ));
+         Intent intent = new Intent(mContext, MainActivity.class);
+         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+         //intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+         startActivity(intent);
          requirePhoto = true;
      }
 
@@ -114,6 +117,7 @@ public  class HttpServerService  extends Service
 
     private void takePhoto(){
         if(requirePhoto){
+            Log.d(LOG_TAG, "takePhoto() >>");
             MainActivity.sendMessageToActivity(TAKING_PICTURE);
             requirePhoto = false;
         }

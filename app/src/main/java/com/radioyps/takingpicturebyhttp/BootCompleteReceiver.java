@@ -13,14 +13,15 @@ public class BootCompleteReceiver
 {
     private static final String LOG_TAG = "<<YEP inside>>: " + BootCompleteReceiver.class.getSimpleName();
 
-  public void onReceive(Context paramContext, Intent paramIntent)
+  public void onReceive(Context mContext, Intent paramIntent)
   {
     String toastStr = paramIntent.getStringExtra("toast");
     Log.d(LOG_TAG,"prepare for toast()>> ");
 
     if (!TextUtils.isEmpty(toastStr)) {
-      Toast.makeText(paramContext, "TakingPciture: BootComplete", Toast.LENGTH_LONG).show();
+      Toast.makeText(mContext, "TakingPciture: BootComplete", Toast.LENGTH_LONG).show();
     }
+    mContext.startService(new Intent(mContext, HttpServerService.class));
   }
 
 

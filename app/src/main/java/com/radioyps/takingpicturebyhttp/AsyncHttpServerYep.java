@@ -13,8 +13,7 @@ import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 
 import java.io.ByteArrayOutputStream;
 
-import static com.radioyps.takingpicturebyhttp.CommonConstants.DESTROY_ACITVITY;
-import static com.radioyps.takingpicturebyhttp.CommonConstants.TAKING_PICTURE;
+
 
 /**
  * Created by yep on 24/11/19.
@@ -27,7 +26,7 @@ public  class AsyncHttpServerYep implements Runnable {
 
     private AsyncHttpServer mAsyncHttpServer = null;
     private HttpServerRequestCallback mServerCb = null;
-    private static String LOG_TAG = "HttpServerThreadRunnable";
+    private static String LOG_TAG = "AsyncHttpServerYep";
     private static Context mContext = null;
     private static Thread httpServerThread;
     private static Bitmap mBitmap = null;
@@ -44,7 +43,7 @@ public  class AsyncHttpServerYep implements Runnable {
     public void run() {
 
 
-        Log.d(LOG_TAG, "HttpServerThreadRunnable 0 >>");
+        //Log.d(LOG_TAG, "HttpServerThreadRunnable 0 >>");
 
         mAsyncHttpServer = new AsyncHttpServer() {
             protected boolean onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
@@ -53,7 +52,7 @@ public  class AsyncHttpServerYep implements Runnable {
             }
         };
 
-        Log.d(LOG_TAG, "HttpServerThreadRunnable 1 >>");
+        //Log.d(LOG_TAG, "HttpServerThreadRunnable 1 >>");
         mServerCb = new HttpServerRequestCallback() {
 
             public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
@@ -62,7 +61,7 @@ public  class AsyncHttpServerYep implements Runnable {
                 try {
 
 
-                    Log.d(LOG_TAG, "HttpServerThreadRunnable:  onRequest()>>  ");
+                    Log.d(LOG_TAG, "onRequest()>> wait... ");
 
                     mServerService.requireTakingPhoto();
                     synchronized (httpServerThread) {
@@ -72,12 +71,13 @@ public  class AsyncHttpServerYep implements Runnable {
 
                         }
                     }
-
+                    Log.d(LOG_TAG, "onRequest()>> continue... ");
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     mBitmap.compress(Bitmap.CompressFormat.JPEG, 100, os);
                     os.flush();
                     response.send("image/jpeg", os.toByteArray());
                     mServerService.requireStopTakingPhoto();
+                    Log.d(LOG_TAG, "onRequest()>> done ");
                     return;
 
                 } catch (Exception e) {
@@ -86,7 +86,7 @@ public  class AsyncHttpServerYep implements Runnable {
                 }
             }
         };
-        Log.d(LOG_TAG, "HttpServer 2 >>");
+//        Log.d(LOG_TAG, "HttpServer 2 >>");
         mAsyncHttpServer.get("/takingPhoto", mServerCb);
         Log.d(LOG_TAG, "HttpServer is running()>>");
         mAsyncHttpServer.listen(8888);
