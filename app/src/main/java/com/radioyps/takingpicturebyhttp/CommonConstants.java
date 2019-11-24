@@ -13,6 +13,8 @@ public class CommonConstants {
     public static final int SERVICE_IS_READY = 0x8815;
     public static final int MSG_PICTURE_TAKEN = 0x188;
     public static final int MSG_ACTIVITY_READY = 0x189;
+    public static final int MSG_ACTIVITY_READY_DELAY_5_SEC = 0x198;
+
     public final static String EXTRA_IMAGE_BYTE_ARRAY = "com.radioyps.takingpicturebyhttp.HttpServerService";
 
 }

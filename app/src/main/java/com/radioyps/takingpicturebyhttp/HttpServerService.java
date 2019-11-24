@@ -21,6 +21,7 @@ import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import static com.radioyps.takingpicturebyhttp.CommonConstants.DESTROY_ACITVITY;
 import static com.radioyps.takingpicturebyhttp.CommonConstants.EXTRA_IMAGE_BYTE_ARRAY;
 import static com.radioyps.takingpicturebyhttp.CommonConstants.MSG_ACTIVITY_READY;
+import static com.radioyps.takingpicturebyhttp.CommonConstants.MSG_ACTIVITY_READY_DELAY_5_SEC;
 import static com.radioyps.takingpicturebyhttp.CommonConstants.MSG_PICTURE_TAKEN;
 import static com.radioyps.takingpicturebyhttp.CommonConstants.TAKING_PICTURE;
 
@@ -67,8 +68,12 @@ public  class HttpServerService  extends Service
                         //finish();
                         break;
                     case MSG_ACTIVITY_READY:
+                        delayTakingPhoto();
+                        break;
+                    case MSG_ACTIVITY_READY_DELAY_5_SEC:
                         takePhoto();
                         break;
+
                 }
             }};
         mContext=getBaseContext();
@@ -115,7 +120,15 @@ public  class HttpServerService  extends Service
 
     }
 
+    private void delayTakingPhoto(){
+        Log.d(LOG_TAG, "delayTakingPhoto() >> delay in 5 sec");
+        Message msg = mHandler.obtainMessage();
+        msg.what = MSG_ACTIVITY_READY_DELAY_5_SEC;
+        mHandler.sendMessageDelayed(msg,5000);
+    }
+
     private void takePhoto(){
+
         if(requirePhoto){
             Log.d(LOG_TAG, "takePhoto() >>");
             MainActivity.sendMessageToActivity(TAKING_PICTURE);

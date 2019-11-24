@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
             Log.i("YEP: CameraTaking","onPictureTaken: done on taking picture >>> 1" );
             //Toast.makeText(getApplicationContext(), "正在保存……", Toast.LENGTH_LONG).show();
             //用BitmapFactory.decodeByteArray()方法可以把相机传回的裸数据转换成Bitmap对象
-            sendPictureToServiceLocal(data);
+
             mBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
             Log.i("YEP: CameraTaking","onPictureTaken: done on taking picture >>> 2");
 //            synchronized (httpCameraServerThread) {
@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            sendPictureToServiceLocal(data);
             // 停止预览
             mCamera.stopPreview();
             // 释放相机资源并置空
