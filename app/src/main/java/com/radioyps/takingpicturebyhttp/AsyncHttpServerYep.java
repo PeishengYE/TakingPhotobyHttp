@@ -66,9 +66,13 @@ public  class AsyncHttpServerYep implements Runnable {
                     mServerService.requireTakingPhoto();
                     synchronized (httpServerThread) {
                         try {
-                            httpServerThread.wait();
+                            httpServerThread.wait(20*1000);
                         } catch (InterruptedException e) {
-
+                            Log.d(LOG_TAG, "onRequest()>> waiting timeout on taking photo from mainactivity... ");
+                            response.code(500);
+                            response.send("waiting timeout on taking photo from mainactivity");
+                            mServerService.requireStopTakingPhoto();
+                            return;
                         }
                     }
                     Log.d(LOG_TAG, "onRequest()>> continue... ");

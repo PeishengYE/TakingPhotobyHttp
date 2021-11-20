@@ -8,6 +8,7 @@ import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.format.DateFormat;
@@ -44,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
     private static SurfaceHolder holder = null;
     private static Context mContext = null;
     private static boolean isServerReady = false;
+    private static PowerManager.WakeLock mWakeLock;
+
 
 
     private static void sendPictureToServiceLocal(byte[] data){
@@ -68,17 +71,17 @@ public class MainActivity extends AppCompatActivity {
 //            }
 
             //接下来的工作就是把Bitmap保存成一个存储卡中的文件
-            File file = new File("/sdcard/YEP"+ new DateFormat().format("yyyyMMdd_hhmmss", Calendar.getInstance(Locale.CHINA)) + ".png");
-            try {
-                file.createNewFile();
-                BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file));
-                mBitmap.compress(Bitmap.CompressFormat.PNG, 100, os);
-                os.flush();
-                os.close();
-                //Toast.makeText(getApplicationContext(), "图片保存完毕，在存储卡的根目录", Toast.LENGTH_LONG).show();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            File file = new File("/sdcard/YEP"+ new DateFormat().format("yyyyMMdd_hhmmss", Calendar.getInstance(Locale.CHINA)) + ".png");
+//            try {
+//                file.createNewFile();
+//                BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file));
+//                mBitmap.compress(Bitmap.CompressFormat.PNG, 100, os);
+//                os.flush();
+//                os.close();
+//                //Toast.makeText(getApplicationContext(), "图片保存完毕，在存储卡的根目录", Toast.LENGTH_LONG).show();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
             sendPictureToServiceLocal(data);
             // 停止预览
             mCamera.stopPreview();
@@ -94,6 +97,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = getBaseContext();
+
+        PowerManager powerManager = (PowerManager)getSystemService(this.POWER_SERVICE);
+        mWakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "YEP:CameraTaking::wakeLock");
 
         mHandler = new Handler() {
             public void handleMessage(Message msg) {
@@ -155,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (mCamera != null) {
-            Log.i("YEP: CameraTaking","mCamera.takePicture");
+            Log.i("YEP: CameraTaking","mCamera.takePicture..");
             //获得相机参数对象
             Camera.Parameters parameters = mCamera.getParameters();
             //设置格式
