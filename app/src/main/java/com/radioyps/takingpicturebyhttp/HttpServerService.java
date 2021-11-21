@@ -1,5 +1,6 @@
 package com.radioyps.takingpicturebyhttp;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -18,8 +19,13 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 
 import static com.radioyps.takingpicturebyhttp.CommonConstants.DESTROY_ACITVITY;
 import static com.radioyps.takingpicturebyhttp.CommonConstants.EXTRA_IMAGE_BYTE_ARRAY;
@@ -45,6 +51,8 @@ public  class HttpServerService  extends Service
     private Notification mNotification = null;
     private final  int NOTIFICATION_ID = 10;
     IntentFilter intentfilter;
+    private static long TIME_INTERVAL = 15*1000;
+    private static long TIME_DELAY = 3*1000;
 
 
 
@@ -142,10 +150,45 @@ public  class HttpServerService  extends Service
 
             Integer batteryVol = (int)(intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE,0));
             Float fullVoltage = (float) (batteryVol * 0.001);
-            Log.v(LOG_TAG, "Battery: voltage: " + fullVoltage);
+            String tmp = "Battery: voltage: " + fullVoltage + "\n";
+            Log.v(LOG_TAG, tmp);
+            saveDataInFile( tmp);
 
         }
     };
+
+    public void SetAlarm(Context context) {
+        //Toast.makeText(context, R.string.updating_in_progress, Toast.LENGTH_LONG).show(); // For example
+        Log.d(LOG_TAG, "Set alarm!");
+        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intnt = new Intent(context, AlarmReceiver.class);
+        PendingIntent pendngIntnt = PendingIntent.getBroadcast(context, 0, intnt, 0);
+        am.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + TIME_DELAY, TIME_INTERVAL, pendngIntnt);
+    }
+
+
+
+    private void saveDataInFile(String data){
+        try {
+
+            File folder = new File(this.getExternalFilesDir(null), "BatteryLevel");
+            folder.mkdirs();
+
+            File batteryFile = new File(folder, "batteryLevel.txt");
+//            FileOutputStream stream = new FileOutputStream(batteryFile);
+            FileOutputStream fOut = openFileOutput("batteryLevel.txt", MODE_APPEND);
+            OutputStreamWriter osw = new OutputStreamWriter(fOut);
+            osw.write(data);
+            osw.flush();
+            osw.close();
+
+
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
 
 
     public int onStartCommand(Intent paramIntent, int paramInt1, int paramInt2)
