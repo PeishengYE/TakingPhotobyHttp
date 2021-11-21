@@ -11,6 +11,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.BatteryManager;
@@ -26,6 +30,7 @@ import android.util.Log;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
 
 import static com.radioyps.takingpicturebyhttp.CommonConstants.DESTROY_ACITVITY;
 import static com.radioyps.takingpicturebyhttp.CommonConstants.EXTRA_IMAGE_BYTE_ARRAY;
@@ -51,7 +56,7 @@ public  class HttpServerService  extends Service
     private Notification mNotification = null;
     private final  int NOTIFICATION_ID = 10;
     IntentFilter intentfilter;
-    private static long TIME_INTERVAL = 15*1000;
+    private static long TIME_INTERVAL = 35*1000;
     private static long TIME_DELAY = 3*1000;
 
 
@@ -61,6 +66,8 @@ public  class HttpServerService  extends Service
     {
         byte[] imageBytes = intent.getByteArrayExtra(EXTRA_IMAGE_BYTE_ARRAY);
        mBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+       String time = makeTime();
+        mBitmap = drawTextToBitmap(time, mBitmap);
        AsyncHttpServerYep.setmBitmap(mBitmap);
         synchronized (httpServerThread) {
                 httpServerThread.notify();
@@ -100,10 +107,61 @@ public  class HttpServerService  extends Service
         mWakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "YEP:CameraTaking::wakeLock");
         setUpAsForeground("Attic leaking monitoring");
         intentfilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        this.registerReceiver(broadcastreceiver,intentfilter);
+        this.registerReceiver(systemBatteryStatusReceiver,intentfilter);
 
+        intentfilter = new IntentFilter("com.radioyps.takingpicturebyhttp.HEARTBEAT");
+        this.registerReceiver(wakeUPtoTakingPhoto,intentfilter);
+        setAlarm(mContext);
 
     }
+
+    private String makeTime(){
+        Long currentTimeMillis = System.currentTimeMillis();
+        SimpleDateFormat format = new SimpleDateFormat("MMdd_HHmm");
+        return format.format(currentTimeMillis);
+    }
+
+
+    public Bitmap drawTextToBitmap(
+                                   String gText,
+                                   Bitmap image) {
+
+
+
+
+        android.graphics.Bitmap.Config bitmapConfig =
+                image.getConfig();
+        // set default bitmap config if none
+        if(bitmapConfig == null) {
+            bitmapConfig = android.graphics.Bitmap.Config.ARGB_8888;
+        }
+        // resource bitmaps are imutable,
+        // so we need to convert it to mutable one
+        image = image.copy(bitmapConfig, true);
+
+        Canvas canvas = new Canvas(image);
+        // new antialised Paint
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        // text color - #3D3D3D
+        paint.setColor(Color.rgb(61, 61, 61));
+        // text size in pixels
+        paint.setTextSize((int) (14 * 2));
+        // text shadow
+        paint.setShadowLayer(1f, 0f, 1f, Color.WHITE);
+
+        // draw text to the Canvas center
+        Rect bounds = new Rect();
+        paint.getTextBounds(gText, 0, gText.length(), bounds);
+        int x = (image.getWidth() - bounds.width())/2;
+        int y = (image.getHeight() + bounds.height())/2 + 400 ;
+        /* Drawing X: 891 Y: 552 */
+        Log.v(LOG_TAG, "Drawing X: " + x  + " Y: " + y);
+
+        canvas.drawText(gText, x, y, paint);
+
+        return image;
+    }
+
 
     void setUpAsForeground(String text) {
 
@@ -144,7 +202,7 @@ public  class HttpServerService  extends Service
     }
 
 
-    private BroadcastReceiver broadcastreceiver = new BroadcastReceiver() {
+    private BroadcastReceiver systemBatteryStatusReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
 
@@ -157,7 +215,18 @@ public  class HttpServerService  extends Service
         }
     };
 
-    public void SetAlarm(Context context) {
+    private BroadcastReceiver wakeUPtoTakingPhoto = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.v(LOG_TAG, "wakeUPtoTakingPhoto()>> ");
+            String time = makeTime();
+            makeNotification("Wake UP on " + time);
+//            requireTakingPhoto();
+
+        }
+    };
+
+    public void setAlarm(Context context) {
         //Toast.makeText(context, R.string.updating_in_progress, Toast.LENGTH_LONG).show(); // For example
         Log.d(LOG_TAG, "Set alarm!");
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);

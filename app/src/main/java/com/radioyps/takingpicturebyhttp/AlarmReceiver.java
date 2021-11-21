@@ -12,7 +12,7 @@ public class AlarmReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
 
         Log.d(TAG, "alarm receiver()>> keep System on");
-        context.sendBroadcast(new Intent("com.google.android.intent.action.GTALK_HEARTBEAT"));
-        context.sendBroadcast(new Intent("com.google.android.intent.action.MCS_HEARTBEAT"));
+        context.sendBroadcast(new Intent("com.radioyps.takingpicturebyhttp.HEARTBEAT"));
+
     }
 }

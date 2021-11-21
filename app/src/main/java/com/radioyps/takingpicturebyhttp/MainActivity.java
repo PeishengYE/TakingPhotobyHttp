@@ -129,8 +129,8 @@ public class MainActivity extends AppCompatActivity {
 
         //创建一个照相预览用的SurfaceView子类，并放在帧布局的底层
 //        Log.i("YEP: CameraTaking","onCreate()>> creating a surface view..");
-//        cv = new CameraView(this);
-//        fl.addView(cv);
+        cv = new CameraView(this);
+        fl.addView(cv);
 
         //创建一个文本框添加在帧布局中，我们可以看到，文字自动出现在了SurfaceView的前面，由此你可以在预览窗口做出各种特殊效果
         TextView tv = new TextView(this);
