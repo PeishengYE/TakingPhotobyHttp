@@ -1,9 +1,7 @@
 package com.radioyps.takingpicturebyhttp;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
-import android.os.Looper;
 import android.util.Log;
 
 import com.koushikdutta.async.http.server.AsyncHttpServer;
@@ -25,7 +23,9 @@ public  class AsyncHttpServerYep implements Runnable {
 
 
     private AsyncHttpServer mAsyncHttpServer = null;
-    private HttpServerRequestCallback mServerCb = null;
+    private HttpServerRequestCallback mTakingPhotoCb = null;
+    private HttpServerRequestCallback mGetBatteryLevelOneHourCb = null;
+    private HttpServerRequestCallback mGetBatteryLevelOneDayCb = null;
     private static String LOG_TAG = "AsyncHttpServerYep";
     private static Context mContext = null;
     private static Thread httpServerThread;
@@ -53,7 +53,7 @@ public  class AsyncHttpServerYep implements Runnable {
         };
 
         //Log.d(LOG_TAG, "HttpServerThreadRunnable 1 >>");
-        mServerCb = new HttpServerRequestCallback() {
+        mTakingPhotoCb = new HttpServerRequestCallback() {
 
             public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
                 response.getHeaders().set("Cache-Control", "no-cache");
@@ -90,8 +90,35 @@ public  class AsyncHttpServerYep implements Runnable {
                 }
             }
         };
+
+        mGetBatteryLevelOneHourCb = new HttpServerRequestCallback() {
+
+            public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
+                response.getHeaders().set("Cache-Control", "no-cache");
+                String tmp = HttpServerService.batteryLevelOneHour.toString();
+                response.send(tmp);
+
+            }
+
+
+        };
+
+        mGetBatteryLevelOneDayCb = new HttpServerRequestCallback() {
+
+            public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
+                response.getHeaders().set("Cache-Control", "no-cache");
+                String tmp = HttpServerService.batteryLevelOneDay.toString();
+                response.send(tmp);
+
+            }
+
+
+        };
+
 //        Log.d(LOG_TAG, "HttpServer 2 >>");
-        mAsyncHttpServer.get("/takingPhoto", mServerCb);
+        mAsyncHttpServer.get("/takingPhoto", mTakingPhotoCb);
+        mAsyncHttpServer.get("/batteryLevelOneHour", mGetBatteryLevelOneHourCb);
+        mAsyncHttpServer.get("/batteryLevelOneDay", mGetBatteryLevelOneDayCb);
         Log.d(LOG_TAG, "HttpServer is running()>>");
         mAsyncHttpServer.listen(8888);
 

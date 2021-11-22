@@ -31,6 +31,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.radioyps.takingpicturebyhttp.CommonConstants.DESTROY_ACITVITY;
 import static com.radioyps.takingpicturebyhttp.CommonConstants.EXTRA_IMAGE_BYTE_ARRAY;
@@ -58,16 +60,60 @@ public  class HttpServerService  extends Service
     IntentFilter intentfilter;
     private static long TIME_INTERVAL = 35*1000;
     private static long TIME_DELAY = 3*1000;
+    private Handler mHandlerCopyBateryLevel = null;
+    /* every BATTERY_LEVEL_COPY_INTERVAL, copy it to one day map */
+    private final  int BATTERY_LEVEL_COPY_INTERVAL = 5;
+    /* in second */
+    private final  int COPY_HANDLER_TIME_INTERVAL = 60;
+
+    public static Map<String, String> batteryLevelOneHour;
+    static {
+        batteryLevelOneHour = new HashMap<>();
+
+    }
+    public static String latestBatteryLevel;
+    public static Map<String, String> batteryLevelOneDay;
+    static {
+        batteryLevelOneDay = new HashMap<>();
+
+    }
+
+    private void copyBatteryLevel(){
+
+        for(Map.Entry<String, String> entry: batteryLevelOneHour.entrySet()){
+                      batteryLevelOneDay.put(entry.getKey(), entry.getValue());
+                      break;
+
+        }
+
+        if(batteryLevelOneDay.size() >= 3600){
+            batteryLevelOneDay.clear();
+        }
+    }
+
+    private void startCopyBatteryLevel(){
+        if(mHandlerCopyBateryLevel == null){
+            mHandlerCopyBateryLevel = new Handler();
+            mHandlerCopyBateryLevel.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Log.v(LOG_TAG, "copy battery Level start");
+                    copyBatteryLevel();
+                    mHandlerCopyBateryLevel.postDelayed(this, COPY_HANDLER_TIME_INTERVAL*1000);
+                }
+            }, COPY_HANDLER_TIME_INTERVAL*1000);
+        }
 
 
-
+    }
 
     private  void getImage(Intent intent)
     {
         byte[] imageBytes = intent.getByteArrayExtra(EXTRA_IMAGE_BYTE_ARRAY);
        mBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
        String time = makeTime();
-        mBitmap = drawTextToBitmap(time, mBitmap);
+       String tmp = "Date: " + time + " Battery Voltage: " + latestBatteryLevel;
+        mBitmap = drawTextToBitmap(tmp, mBitmap);
        AsyncHttpServerYep.setmBitmap(mBitmap);
         synchronized (httpServerThread) {
                 httpServerThread.notify();
@@ -100,9 +146,13 @@ public  class HttpServerService  extends Service
                 }
             }};
         mContext=getBaseContext();
+
         Log.d(LOG_TAG, "onCreate() >>");
         AsyncHttpServerYep.startHttpServer(mContext, this);
         httpServerThread = AsyncHttpServerYep.getThread();
+
+        startCopyBatteryLevel();
+
         PowerManager powerManager = (PowerManager)getSystemService(this.POWER_SERVICE);
         mWakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "YEP:CameraTaking::wakeLock");
         setUpAsForeground("Attic leaking monitoring");
@@ -209,8 +259,13 @@ public  class HttpServerService  extends Service
             Integer batteryVol = (int)(intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE,0));
             Float fullVoltage = (float) (batteryVol * 0.001);
             String tmp = "Battery: voltage: " + fullVoltage + "\n";
+            if (batteryLevelOneHour.size()> 3600){
+                batteryLevelOneHour.clear();
+            }
+            batteryLevelOneHour.put(makeTime(), fullVoltage.toString());
+            latestBatteryLevel = fullVoltage.toString();
             Log.v(LOG_TAG, tmp);
-            saveDataInFile( tmp);
+//            saveDataInFile( tmp);
 
         }
     };
