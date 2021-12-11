@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
 
+import com.google.gson.Gson;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
@@ -95,7 +96,8 @@ public  class AsyncHttpServerYep implements Runnable {
 
             public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
                 response.getHeaders().set("Cache-Control", "no-cache");
-                String tmp = HttpServerService.batteryLevelOneHour.toString();
+                Gson gson = new Gson();
+                String tmp = gson.toJson(HttpServerService.batteryLevelOneHour);
                 response.send(tmp);
 
             }
@@ -107,7 +109,8 @@ public  class AsyncHttpServerYep implements Runnable {
 
             public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
                 response.getHeaders().set("Cache-Control", "no-cache");
-                String tmp = HttpServerService.batteryLevelOneDay.toString();
+                Gson gson = new Gson();
+                String tmp = gson.toJson(HttpServerService.batteryLevelOneDay);
                 response.send(tmp);
 
             }
